@@ -1,0 +1,97 @@
+1. wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && bash Miniconda3-latest-Linux-x86_64.sh -b && source miniconda3/bin/activate && conda init && conda deactivate && conda config --system --set auto_activate_base false
+
+2.
+
+sudo docker build -t <IMAGE_REPOSITORY_NAME>:<IMAGE_TAG_NAME> .
+
+sudo docker run -d -it --net=host -p <HOST_PORT>:<CONTAINER_PORT> --name=<CONTAINER_NAME> <IMAGE_REPOSITORY_NAME>:<IMAGE_TAG_NAME>
+
+sudo docker exec -it <CONTAINER_NAME> bash
+
+3.
+
+version: "3.8"
+
+services:
+  hadoopmaster:
+    build:
+      context: .
+      dockerfile: Dockerfile_hadoop
+    networks:
+     hadoop:
+       ipv4_address: 192.168.0.0
+    hostname: hadoopmaster
+    image: hadoopmaster:3.2.1
+    container_name: hadoopmaster
+    ports:
+     - 9870:9870
+     - 8088:8088
+     - 19888:19888
+     - 8188:8188
+    extra_hosts:
+      - "hadoopmaster:192.168.0.0"
+      - "hadoopworker1:192.168.0.1"
+      - "hadoopworker2:192.168.0.2"
+    tty: true
+
+  hadoopworker1:
+    build:
+      context: .
+      dockerfile: Dockerfile_hadoop
+    networks:
+     hadoop:
+       ipv4_address: 192.168.0.1
+    hostname: hadoopworker1
+    image: hadoopworker1:3.2.1
+    depends_on:
+      - hadoopmaster
+    container_name: hadoopworker1
+    ports:
+     - 9864:9864
+     - 8042:8042
+    extra_hosts:
+      - "hadoopmaster:192.168.0.0"
+      - "hadoopworker1:192.168.0.1"
+      - "hadoopworker2:192.168.0.2"
+    tty: true
+
+  hadoopworker2:
+    build:
+      context: .
+      dockerfile: Dockerfile_hadoop
+    networks:
+     hadoop:
+       ipv4_address: 192.168.0.2
+    hostname: hadoopworker2
+    image: hadoopworker2:3.2.1
+    depends_on:
+      - hadoopmaster
+    container_name: hadoopworker2
+    ports:
+     - 9865:9864
+     - 8043:8042
+    extra_hosts:
+      - "hadoopmaster:192.168.0.0"
+      - "hadoopworker1:192.168.0.1"
+      - "hadoopworker2:192.168.0.2"
+    tty: true
+
+networks:
+  hadoop:
+    name: hadoop
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.0/2
+
+
+4. sshpass
+
+5.
+
+For Windows:
+
+git config --list --show-origin
+git config --list --show-origin --show-scope
+git config --global core.autocrlf false
